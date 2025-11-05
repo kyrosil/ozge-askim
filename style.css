@@ -12,10 +12,10 @@ body {
     background: linear-gradient(135deg, #FF6F91 0%, #FFC72C 100%);
     padding: 20px;
     box-sizing: border-box;
-    overflow: hidden;
+    overflow-x: hidden; /* Yatay taşmayı engelle */
     color: #333;
     position: relative;
-    transition: background 1s ease-in-out; /* Arkaplan geçişi için */
+    transition: background 1s ease-in-out;
 }
 
 /* Ana İçerik Kutusu */
@@ -23,21 +23,19 @@ body {
     text-align: center;
     position: relative;
     width: 100%;
-    max-width: 580px; /* Biraz daha geniş */
+    max-width: 580px;
     margin: 0 auto;
-    perspective: 1000px;
 }
 
 .content-box {
     background: #ffffff;
-    padding: 40px 30px;
+    padding: 30px;
     border-radius: 25px;
     box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
-    transition: all 0.5s ease-in-out;
-    transform-style: preserve-3d;
     animation: popIn 0.8s ease-out forwards;
-    position: relative;
+    position: relative; /* KAÇAN BUTON İÇİN ÇOK ÖNEMLİ */
     z-index: 10;
+    min-height: 500px; /* Kaçış alanı için minimum yükseklik */
 }
 
 @keyframes popIn {
@@ -47,29 +45,24 @@ body {
 
 /* GIF Stili */
 .love-gif {
-    max-width: 250px; /* Daha büyük GIF */
+    max-width: 250px;
     height: auto;
     border-radius: 15px;
     margin-bottom: 25px;
     box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    transition: transform 0.3s ease;
-}
-.love-gif:hover {
-    transform: scale(1.05) rotate(2deg);
 }
 
 /* Başlıklar */
 h1 {
-    font-family: 'Great Vibes', cursive; /* Daha romantik bir font */
-    font-size: 3.5em; /* Daha büyük */
+    font-family: 'Great Vibes', cursive;
+    font-size: 3.2em;
     margin-bottom: 8px;
     color: #E91E63;
     font-weight: 700;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
 }
 
 h2 {
-    font-size: 1.8em; /* Daha büyük */
+    font-size: 1.6em;
     margin-top: 8px;
     font-weight: 400;
     color: #555;
@@ -78,13 +71,12 @@ h2 {
 
 /* Buton Alanı Kapsayıcısı */
 .buttons-wrapper {
-    margin-top: 40px;
+    margin-top: 30px;
     position: relative;
-    height: 80px; /* Butonların hareket alanı için daha fazla yer */
-    display: flex; /* Flexbox ile yan yana durmalarını sağla */
-    justify-content: center;
-    align-items: center;
-    gap: 25px; /* Butonlar arası boşluk */
+    display: flex;
+    flex-direction: column; /* !!! İSTEDİĞİN GİBİ ALT ALTA !!! */
+    align-items: center; /* Ortala */
+    gap: 20px; /* Butonlar arası boşluk */
 }
 
 /* Genel Buton Stili */
@@ -97,41 +89,43 @@ button {
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
     box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-    position: relative; /* Z-index için */
-    z-index: 1;
+    width: 80%; /* Butonların genişliği eşit olsun */
+    max-width: 300px; /* Çok da genişlemesin */
     white-space: nowrap;
-    min-width: 150px; /* Butonların minimum genişliği */
 }
 
 /* Evet Butonu */
 #yesButton {
     background-color: #4CAF50;
     color: white;
+    position: relative; /* Kaçan butonun z-index'inden etkilenmesin */
+    z-index: 5;
 }
 #yesButton:hover {
-    transform: scale(1.15) rotate(-3deg);
-    background-color: #43a047;
-    box-shadow: 0 12px 25px rgba(0, 150, 0, 0.3);
+    transform: scale(1.1);
 }
 
-/* Hayır Butonu - Gizli ve Kaçan */
+/* Hayır Butonu */
 #noButton {
     background-color: #F44336;
     color: white;
-    position: absolute; /* Mutlak konumlandırma */
-    transition: all 0.3s ease-out; /* Hızlı ve yumuşak geçiş */
-    min-width: 150px;
-    white-space: nowrap;
-    opacity: 1;
-    pointer-events: auto;
-    z-index: 2; /* Yes butonunun üzerinde olsun */
+    position: relative; /* Başlangıçta normal akışta */
+    z-index: 10;
+    transition: transform 0.3s ease, background-color 0.3s ease;
+}
+#noButton:hover {
+    transform: scale(1.1);
 }
 
-/* Başlangıçta Hayır butonunu gizlemek için */
-#noButton.hidden {
-    opacity: 0;
-    pointer-events: none;
-    transform: scale(0.1); /* Gizlerken küçülerek yok olsun */
+/* Hayır butonu kaçmaya başladığında bu sınıfı alacak */
+#noButton.is-escaping {
+    position: absolute; /* !!! ARTIK KAÇABİLİR !!! */
+    width: auto; /* Genişliği içeriğine göre ayarla */
+    min-width: 150px;
+    z-index: 99;
+    box-shadow: 0 10px 30px rgba(244, 67, 54, 0.5); /* Kaçarken gölge */
+    /* top ve left JS ile ayarlanacak */
+    transition: top 0.2s ease-out, left 0.2s ease-out;
 }
 
 /* Footer */
@@ -140,132 +134,100 @@ footer {
     font-size: 1em;
     color: rgba(0,0,0,0.6);
     animation: fadeIn 1s 0.8s ease-out both;
-    font-weight: 300;
 }
 
-/* Mobil Uyumluluk */
-@media (max-width: 768px) {
-    .content-box {
-        padding: 30px 20px;
-        border-radius: 20px;
-    }
-    h1 { font-size: 2.5em; }
-    h2 { font-size: 1.5em; }
-    .love-gif { max-width: 200px; margin-bottom: 20px; }
-    button { 
-        font-size: 1.1em; 
-        padding: 12px 25px; 
-        min-width: unset;
-    }
-    .buttons-wrapper {
-        flex-direction: column; /* Mobil dikey sıralama */
-        height: auto;
-        gap: 15px;
-    }
-    /* Mobil'de 'Hayır' butonu da normal akışta gözükmeli (kaçmadan önce) */
-    #noButton {
-        position: relative; /* Mobil'de ilk başta relative olsun */
-        margin-top: 15px;
-        left: unset;
-        top: unset;
-        transform: unset;
-    }
-    #noButton.active-mobile-escape { /* Mobil'de kaçmaya başlayınca absolut olsun */
-        position: absolute;
-    }
-}
+/* --- KUTLAMA EKRANI VE MOBİL UYUMLULUK DÜZELTMESİ --- */
 
-
-/* Konfeti Animasyonu */
-.confetti {
-    position: fixed;
-    width: 10px;
-    height: 10px;
-    background-color: #f00;
-    opacity: 0;
-    border-radius: 50%;
-    animation: fallAndFade 3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-    z-index: 9999;
-    pointer-events: none;
-}
-
-@keyframes fallAndFade {
-    0% {
-        transform: translateY(-10vh) translateX(0) rotate(0deg) scale(0.5);
-        opacity: 0;
-    }
-    10% { opacity: 1; }
-    100% {
-        transform: translateY(100vh) translateX(var(--x-end)) rotate(720deg) scale(1.2);
-        opacity: 0;
-    }
-}
-
-/* Kalp Animasyonu */
-.heart {
-    position: fixed;
-    font-size: 2.5em;
-    color: #FF6F91;
-    pointer-events: none;
-    opacity: 0;
-    animation: floatAndFade 2s ease-out forwards;
-    z-index: 9999;
-    text-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-@keyframes floatAndFade {
-    from {
-        transform: translateY(0) scale(0);
-        opacity: 0;
-    }
-    20% {
-        transform: translateY(-20px) scale(1);
-        opacity: 1;
-    }
-    to {
-        transform: translateY(-150px) scale(1.5);
-        opacity: 0;
-    }
-}
-
-/* Evet sonrası ekran için stil */
 .celebration-box {
-    background: linear-gradient(135deg, #FFDAB9 0%, #FFC0CB 100%); /* Daha yumuşak gradyan */
-    padding: 50px 30px;
+    background: linear-gradient(135deg, #FFDAB9 0%, #FFC0CB 100%);
+    padding: 40px 25px;
     border-radius: 30px;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
     animation: zoomIn 1s ease-out forwards;
     text-align: center;
 }
-
 @keyframes zoomIn {
     from { transform: scale(0.7); opacity: 0; }
     to { transform: scale(1); opacity: 1; }
 }
-
 .celebration-box h1 {
     font-family: 'Great Vibes', cursive;
-    font-size: 4.5em; /* Daha büyük ve etkileyici */
+    font-size: 3.5em; /* Mobil için ayarlanacak */
     color: #E91E63;
-    text-shadow: 3px 3px 6px rgba(0,0,0,0.15);
     margin-bottom: 15px;
 }
-
 .celebration-box h2 {
-    font-size: 2.2em;
+    font-size: 1.8em; /* Mobil için ayarlanacak */
     color: #333;
     margin-bottom: 25px;
 }
-
 .celebration-box p {
-    font-size: 1.3em;
+    font-size: 1.2em; /* Mobil için ayarlanacak */
     color: #666;
     line-height: 1.6;
+    font-family: 'Poppins', sans-serif;
 }
-
 .celebration-gif {
-    max-width: 300px; /* Daha büyük */
-    margin: 30px auto;
+    max-width: 300px;
+    width: 100%;
+    margin: 25px auto;
     border-radius: 20px;
     box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+/* --- MOBİL UYUMLULUK (TÜM SAYFA İÇİN) --- */
+@media (max-width: 600px) {
+    .content-box {
+        padding: 20px;
+        min-height: 450px; /* Mobilde de kaçış alanı */
+    }
+    h1 { font-size: 2.5em; }
+    h2 { font-size: 1.3em; }
+    .love-gif { max-width: 200px; }
+    button { 
+        font-size: 1.1em; 
+        width: 90%; /* Mobilde daha geniş */
+    }
+
+    /* KUTLAMA EKRANI MOBİL UYUMLULUK */
+    .celebration-box {
+        padding: 30px 15px;
+    }
+    .celebration-box h1 {
+        font-size: 2.8em; /* Küçültüldü */
+    }
+    .celebration-box h2 {
+        font-size: 1.4em; /* Küçültüldü */
+    }
+    .celebration-box p {
+        font-size: 1em; /* Küçültüldü */
+    }
+    .celebration-gif {
+        max-width: 250px; /* Küçültüldü */
+    }
+}
+
+/* Animasyonlar (Değişiklik yok) */
+.confetti-container, .heart-container {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; z-index: 9999;
+}
+.confetti, .heart { position: fixed; pointer-events: none; opacity: 0; z-index: 9999; }
+.confetti {
+    width: 10px; height: 10px; background-color: #f00; border-radius: 50%;
+    animation: fallAndFade 3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+@keyframes fallAndFade {
+    0% { transform: translateY(-10vh) translateX(0) rotate(0deg) scale(0.5); opacity: 0; }
+    10% { opacity: 1; }
+    100% { transform: translateY(100vh) translateX(var(--x-end)) rotate(720deg) scale(1.2); opacity: 0; }
+}
+.heart {
+    font-size: 2.5em; color: #FF6F91; text-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    animation: floatAndFade 2s ease-out forwards;
+}
+@keyframes floatAndFade {
+    from { transform: translateY(0) scale(0); opacity: 0; }
+    20% { transform: translateY(-20px) scale(1); opacity: 1; }
+    to { transform: translateY(-150px) scale(1.5); opacity: 0; }
 }
