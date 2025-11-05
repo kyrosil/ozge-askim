@@ -21,25 +21,37 @@ document.addEventListener('DOMContentLoaded', () => {
         noButtonClickCount++;
         updateQuestionBasedOnNoClickCount();
 
-        const containerRect = mainContentBox.getBoundingClientRect();
-        const btnRect = noButton.getBoundingClientRect();
+        // --- YENİ ve GÜVENLİ KONUMLANDIRMA ---
+        const containerRect = mainContentBox.getBoundingClientRect(); // Ana kutunun bilgileri
+        const btnRect = noButton.getBoundingClientRect(); // Butonun bilgileri
+        const questionRect = question.getBoundingClientRect(); // Sorunun bilgileri (En önemlisi bu)
         
-        // Ana kutunun (mainContentBox) içindeki maksimum koordinatları hesapla
-        // Padding (iç boşluk) payını da düşüyoruz
-        const padding = 20; 
-        const maxX = mainContentBox.offsetWidth - btnRect.width - padding;
-        const maxY = mainContentBox.offsetHeight - btnRect.height - padding;
+        const padding = 15; // Kenarlardan bırakılacak boşluk
+
+        // 1. YATAY (X) POZİSYON HESAPLAMA
         const minX = padding;
-        
-        // Butonun GIF ve başlıkların üzerine gelmemesi için minimum Y pozisyonu
-        const headerAreaHeight = mainGif.offsetHeight + question.offsetHeight + 30;
-        const minY = Math.max(padding, headerAreaHeight); // Başlık alanının altında kalmalı
-
-        // Y'nin çok aşağıda kalmamasını sağla
-        const effectiveMaxY = Math.max(minY + btnRect.height, maxY);
-
+        const maxX = mainContentBox.offsetWidth - btnRect.width - padding;
         let newX = Math.random() * (maxX - minX) + minX;
-        let newY = Math.random() * (effectiveMaxY - minY) + minY;
+
+        // 2. DİKEY (Y) POZİSYON HESAPLAMA (DÜZELTİLEN KISIM)
+        
+        // En üst sınır (minY): Sorunun alt kenarının, kutuya göre pozisyonu + padding
+        // Bu sayede buton ASLA sorunun veya başlığın üzerine çıkamaz.
+        const minY = (questionRect.bottom - containerRect.top) + padding;
+        
+        // En alt sınır (maxY): Kutunun toplam yüksekliği - butonun yüksekliği - padding
+        // Bu sayede buton ASLA kutunun dışına (aşağısına) çıkamaz.
+        const maxY = mainContentBox.offsetHeight - btnRect.height - padding;
+
+        // Güvenlik önlemi: Eğer (çok küçük bir ekranda) minY, maxY'den büyük olursa
+        // (yani kaçacak yer kalmazsa), butonun en altta kalmasını sağla.
+        let calculatedMinY = minY;
+        if (minY > maxY) {
+            calculatedMinY = maxY - padding; // En alta zorla
+        }
+
+        // Güvenli aralıkta (calculatedMinY ile maxY arasında) rastgele bir dikey pozisyon üret
+        let newY = Math.random() * (maxY - calculatedMinY) + calculatedMinY;
         
         // Yeni pozisyonu ata
         noButton.style.left = `${newX}px`;
