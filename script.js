@@ -1,88 +1,103 @@
 document.addEventListener('DOMContentLoaded', () => {
     const noButton = document.getElementById('noButton');
     const yesButton = document.getElementById('yesButton');
-    const contentBox = document.querySelector('.content-box');
+    const mainContentBox = document.getElementById('mainContentBox'); // Ana içerik kutusu
     const question = document.getElementById('question');
     const mainGif = document.getElementById('mainGif');
-    const buttonsWrapper = document.querySelector('.buttons-wrapper'); // Buton kapsayıcısı
-    
-    let noButtonClickCount = 0; // Hayır butonuna kaç kez tıklandığını/üzerine gelindiğini sayarız
+    const buttonsWrapper = document.querySelector('.buttons-wrapper');
+    const footer = document.querySelector('footer');
 
-    // 'Hayır' butonunun başlangıçta gizlenmesi
-    noButton.classList.add('no-button-hidden');
+    let noButtonClickCount = 0; // Hayır butonuna kaç kez tıklandığını/üzerine gelindiğini sayar
 
-    // İlk başta 'Hayır' butonu kaçmıyor, sadece bir kez üzerine gelince ortaya çıkıyor
-    // Mobil için hem mouseover hem de click olayını dinliyoruz.
-    noButton.addEventListener('mouseover', handleNoButtonInteraction);
-    noButton.addEventListener('click', handleNoButtonInteraction);
+    // --- Başlangıç Ayarları ---
+    // 'Hayır' butonu başlangıçta gizli
+    noButton.classList.add('hidden');
 
-    function handleNoButtonInteraction() {
-        if (noButton.classList.contains('no-button-hidden')) {
-            // İlk kez etkileşimde: butonu göster ve kaçmaya hazırla
-            noButton.classList.remove('no-button-hidden');
-            noButton.style.position = 'absolute'; // Artık kaçmaya başlayabilir
-            noButton.style.top = '50%';
-            noButton.style.left = '70%'; // Sağ tarafa başlangıç pozisyonu
-            noButton.style.transform = 'translate(-50%, -50%)'; // Ortalamak için
+    // 'Evet' butonuna yaklaşıldığında veya tıklandığında 'Hayır' butonunu ortaya çıkar
+    yesButton.addEventListener('mouseover', showNoButton);
+    yesButton.addEventListener('click', showNoButton); // Mobil için
+
+    function showNoButton() {
+        if (noButton.classList.contains('hidden')) {
+            noButton.classList.remove('hidden');
+            // Butonu 'Yes' butonunun sağ tarafına, kapsayıcı içinde konumlandır
+            // Mobil için farklı başlangıç pozisyonu
+            if (window.innerWidth <= 768) {
+                noButton.style.position = 'relative';
+                noButton.style.marginTop = '15px'; // Mobil için altına yerleştir
+                noButton.style.left = 'unset';
+                noButton.style.top = 'unset';
+                noButton.style.transform = 'unset';
+            } else {
+                noButton.style.position = 'absolute';
+                noButton.style.left = `calc(50% + ${yesButton.offsetWidth / 2 + 30}px)`; // Evet'in sağında
+                noButton.style.top = '50%';
+                noButton.style.transform = 'translate(-50%, -50%)';
+            }
             
             // İlk gösterimden sonra her etkileşimde kaçacak
             noButton.addEventListener('mouseover', moveButton);
             noButton.addEventListener('click', moveButton);
-
-            // Ve kullanıcıya ilk ipucunu ver
-            question.textContent = "Aa, emin misin? Bir daha düşün istersen? 🤔";
-            mainGif.src = "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMjFnZzFmbGR3M3E4ZHN0ZGwzd3UycG93bHZwMHd3OXFmZmE1eXBycyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/Vz9T9lO7iG0lq/giphy.gif"; // Farklı bir GIF
-        } else {
-            // Sonraki etkileşimlerde butonu kaçır
-            moveButton();
-            noButtonClickCount++;
-            updateQuestionBasedOnNoClickCount();
         }
     }
 
     function moveButton() {
+        noButtonClickCount++;
+        updateQuestionBasedOnNoClickCount();
+
         const buttonRect = noButton.getBoundingClientRect();
-        const wrapperRect = buttonsWrapper.getBoundingClientRect(); // Kapsayıcı içinde kalması için
+        const wrapperRect = buttonsWrapper.getBoundingClientRect(); // buttons-wrapper içinde kalması için
+        const yesButtonRect = yesButton.getBoundingClientRect();
 
         let newX, newY;
         let attempts = 0;
-        const padding = 10; // Butonun kenarlara çok yapışmasını engelle
+        const padding = 15; // Butonun kenarlara çok yapışmasını engelle
+        const maxAttempts = 100;
+
+        // Mobil için 'Hayır' butonu 'absolute' pozisyona geçmeli ki kaçabilsin
+        if (window.innerWidth <= 768) {
+             noButton.classList.add('active-mobile-escape');
+             // Mobil'de de buttons-wrapper içinde kaçmasını sağlıyoruz
+             noButton.style.position = 'absolute';
+        }
+
 
         // Butonun Yes butonuna çarpmadan rastgele yeni bir konuma kaçmasını sağla
-        // Aynı zamanda kapsayıcı dışına çıkmasını engelle
+        // Aynı zamanda buttons-wrapper dışına çıkmasını engelle
         do {
+            // buttons-wrapper'ın sol üst köşesine göre pozisyon hesapla
             newX = Math.random() * (wrapperRect.width - buttonRect.width - padding * 2) + padding;
             newY = Math.random() * (wrapperRect.height - buttonRect.height - padding * 2) + padding;
+            
             attempts++;
-            if (attempts > 50) { // Çok fazla denemeyi engelle
+            if (attempts > maxAttempts) {
                 console.warn("Could not find a perfect spot for 'no' button, might overlap.");
                 break;
             }
-        } while (isOverlapping(newX, newY, buttonRect.width, buttonRect.height, yesButton.getBoundingClientRect()));
+        } while (isOverlapping(newX, newY, buttonRect.width, buttonRect.height, yesButtonRect, wrapperRect));
 
         noButton.style.left = `${newX}px`;
         noButton.style.top = `${newY}px`;
+        // Butonun dönüşünü ve hafif hareketini ekle
+        noButton.style.transform = `translate(-50%, -50%) rotate(${Math.random() * 20 - 10}deg)`;
     }
 
-    // İki dikdörtgenin çakışıp çakışmadığını kontrol eder
-    function isOverlapping(x1, y1, w1, h1, rect2) {
-        // Yes butonunun göreceli pozisyonunu wrapper'a göre al
-        const yesButtonRect = yesButton.getBoundingClientRect();
-        const wrapperRect = buttonsWrapper.getBoundingClientRect();
+    // İki dikdörtgenin çakışıp çakışmadığını kontrol eder (wrapper'a göre)
+    function isOverlapping(x1_rel, y1_rel, w1, h1, rect2_abs, wrapperRect) {
+        // rect2_abs (Yes butonu) absolute koordinatlarını wrapper'a göre çevir
+        const x2_rel = rect2_abs.left - wrapperRect.left;
+        const y2_rel = rect2_abs.top - wrapperRect.top;
+        const w2 = rect2_abs.width;
+        const h2 = rect2_abs.height;
 
-        const x2 = yesButtonRect.left - wrapperRect.left;
-        const y2 = yesButtonRect.top - wrapperRect.top;
-        const w2 = yesButtonRect.width;
-        const h2 = yesButtonRect.height;
-
-        return !(x1 + w1 < x2 || x1 > x2 + w2 || y1 + h1 < y2 || y1 > y2 + h2);
+        return !(x1_rel + w1 < x2_rel || x1_rel > x2_rel + w2 || y1_rel + h1 < y2_rel || y1_rel > y2_rel + h2);
     }
 
     // Hayır butonuna tıklama sayısına göre mesajları güncelle
     function updateQuestionBasedOnNoClickCount() {
         switch (noButtonClickCount) {
             case 1:
-                question.textContent = "Ciddi misin? Kalbimi kırıyorsun! 💔";
+                question.textContent = "Aa, emin misin? Kalbimi kırıyorsun! 💔";
                 mainGif.src = "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZWM0NGx1eW11aXQxMHhxa29rdGNpa2kzd3Y0ZWh1ajY0bmt5dGJ2ZiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/ObFfJgXp3oB8Q/giphy.gif"; // Üzgün GIF
                 break;
             case 2:
@@ -93,11 +108,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 mainGif.src = "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExd2J2dm5iOXk3cGNicnZrbWdkazNvcXJicHJwZ3U4MnEzcWVkZHdsZiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/OPU6qrj1FE4JIh9LXO/giphy.gif"; // Yalvaran GIF
                 break;
             case 4:
-                question.textContent = "Tamam, şaka yapıyorum ama bu sefer ciddiyim: EVET! ❤️";
-                noButton.style.display = 'none'; // Hayır butonu tamamen yok olsun
+                question.textContent = "Şaka yapıyorum demeyecem, sadece EVET'e bas! ❤️";
+                noButton.textContent = "Asla Hayır!"; // Buton metnini değiştir
+                break;
+            case 5:
+                question.textContent = "Sanırım beni çok seviyorsun... Bu bir oyun değil! 😂 EVET! ";
+                mainGif.src = "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExYTV2dnV3ZnJ0N2MxdHF4cTNib3B3NHZ2eHN4aGJpNHR0bWtvb2FxbCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/Y3w4FbUaOaD3tWc2Lz/giphy.gif"; // Gülme GIF'i
                 break;
             default:
-                question.textContent = "Artık başka seçeneğin yok gibi... 😄 EVET'e bas! ";
+                question.textContent = "Bak, sana bir sır vereyim mi? Tek seçenek EVET! 😉";
+                noButton.textContent = "İnat Ediyorum! (Boşuna)";
                 break;
         }
     }
@@ -105,44 +125,49 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- BÜYÜK SÜRPRİZ: 'Evet' Butonuna Tıklanınca ---
     yesButton.addEventListener('click', () => {
-        // GIF'i ve metni değiştir
-        mainGif.src = "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZTc1aDR5eXgyN3BzdXBwZXV6bTR6em9oeWh6ZXhic2F5ajVldGZkeCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/26FLdmIp6wJr91JAI/giphy.gif"; // Kutlama GIF'i
-        contentBox.innerHTML = `
-            <img src="${mainGif.src}" alt="Kutlama" class="love-gif" />
-            <h1>Biliyordummm Özge! 😍</h1>
-            <h2>Artık resmen benim 'aşkım'sın! Kalbimdesin hep! 💖</h2>
-            <p style="font-size: 1.1em; margin-top: 20px; color: #666;">Bu bizim başlangıcımız olsun! Seni çok seviyorum! 😘</p>
+        // İçerik kutusunu temizle ve yeni kutlama içeriğini yükle
+        mainContentBox.innerHTML = `
+            <div class="celebration-box">
+                <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZTc1aDR5eXgyN3BzdXBwZXV6bTR6em9oeWh6ZXhic2F5ajVldGZkeCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/26FLdmIp6wJr91JAI/giphy.gif" alt="Kutlama" class="celebration-gif" />
+                <h1>SENİ SEVİYORUMMM, AŞKIM! 😍</h1>
+                <h2>Hayallerim gerçek oldu! Artık resmen benim 'aşkım'sın! 💖</h2>
+                <p style="font-size: 1.3em; margin-top: 25px; color: #666; font-family: 'Poppins', sans-serif;">
+                    Bu bizim başlangıcımız olsun. Her anımız sevgi dolu, her günümüz sürprizlerle geçsin! 
+                    İyi ki varsın, canım Özge'm! Nice anılar biriktirelim...
+                </p>
+                <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExOGx4NW12b2FjYnNqYmQxazc3ajh5cml3eDN5aWwxeHZtZ2R4cW1tbiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/Vz9T9lO7iG0lq/giphy.gif" alt="Kalpler" style="max-width: 150px; margin-top: 20px; border-radius: 10px;">
+            </div>
         `;
         
-        // 'Hayır' butonunu tamamen sakla
-        if(noButton) noButton.style.display = 'none';
+        // Footer'ı da gizle veya değiştir (isteğe bağlı)
+        if(footer) footer.style.opacity = '0'; 
 
         // Kutlama animasyonlarını başlat
         startConfetti();
         startHeartBurst();
 
-        // Arkaplanı biraz daha parlat
-        document.body.style.background = 'linear-gradient(135deg, #FF9A9E 0%, #FAD0C4 99%, #FAD0C4 100%)';
-        document.body.style.transition = 'background 1s ease-in-out';
+        // Arkaplanı daha parlak ve kutlamaya uygun yap
+        document.body.style.background = 'linear-gradient(135deg, #FFDAB9 0%, #FFC0CB 100%)';
     });
 
     // --- Konfeti Fonksiyonu ---
     function startConfetti() {
-        const colors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4', '#4caf50', '#ffeb3b', '#ff9800', '#FF6F91', '#FFC72C'];
-        
-        for (let i = 0; i < 150; i++) { // Daha fazla konfeti
+        const colors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4', '#4caf50', '#ffeb3b', '#ff9800', '#FF6F91', '#FFC72C', '#f06292', '#ba68c8'];
+        const confettiContainer = document.querySelector('.confetti-container');
+
+        for (let i = 0; i < 200; i++) { // Daha fazla konfeti
             const confetti = document.createElement('div');
             confetti.classList.add('confetti');
             
             confetti.style.left = `${Math.random() * 100}vw`;
-            confetti.style.top = `${Math.random() * -20}vh`; // Ekranın biraz daha üstünden başla
+            confetti.style.top = `${Math.random() * -30}vh`; // Ekranın daha da üstünden başla
             confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-            confetti.style.width = `${Math.random() * 8 + 5}px`;
+            confetti.style.width = `${Math.random() * 10 + 5}px`;
             confetti.style.height = confetti.style.width;
-            confetti.style.animationDelay = `${Math.random() * 3}s`;
-            confetti.style.setProperty('--x-end', `${(Math.random() - 0.5) * 200}px`); // Yatayda rastgele kayma
+            confetti.style.animationDelay = `${Math.random() * 4}s`; // Gecikmeli başla
+            confetti.style.setProperty('--x-end', `${(Math.random() - 0.5) * 400}px`); // Yatayda daha fazla kayma
 
-            document.body.appendChild(confetti);
+            confettiContainer.appendChild(confetti); // Konfeti container'ına ekle
 
             confetti.addEventListener('animationend', () => {
                 confetti.remove();
@@ -152,20 +177,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Kalp Patlaması Fonksiyonu ---
     function startHeartBurst() {
-        const numberOfHearts = 20;
+        const numberOfHearts = 30; // Daha fazla kalp
+        const heartContainer = document.querySelector('.heart-container');
+
         for (let i = 0; i < numberOfHearts; i++) {
             const heart = document.createElement('div');
             heart.classList.add('heart');
-            heart.innerHTML = '❤️'; // Unicode kalp karakteri
+            heart.innerHTML = '❤️';
             
-            // Rastgele başlangıç pozisyonu (Evet butonunun civarından)
-            const yesBtnRect = yesButton.getBoundingClientRect();
-            heart.style.left = `${yesBtnRect.left + yesBtnRect.width / 2 + (Math.random() - 0.5) * 50}px`;
-            heart.style.top = `${yesBtnRect.top + yesBtnRect.height / 2 + (Math.random() - 0.5) * 50}px`;
-            heart.style.animationDelay = `${Math.random() * 0.5}s`;
-            heart.style.animationDuration = `${2 + Math.random() * 1}s`; // Farklı hızlar
+            // Ekranın alt orta kısmından çıksınlar gibi bir efekt
+            heart.style.left = `${50 + (Math.random() - 0.5) * 40}vw`; // Ekranın ortasından rastgele
+            heart.style.top = `${100 + (Math.random() * 10)}vh`; // Ekranın altından başla
+            heart.style.animationDelay = `${Math.random() * 0.8}s`;
+            heart.style.animationDuration = `${2.5 + Math.random() * 1.5}s`; // Farklı hızlar
 
-            document.body.appendChild(heart);
+            heartContainer.appendChild(heart); // Kalp container'ına ekle
 
             heart.addEventListener('animationend', () => {
                 heart.remove();
